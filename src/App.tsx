@@ -1,50 +1,45 @@
 import { styled } from '@linaria/react';
 import { useEffect, useEffectEvent, useState } from 'react';
+import { noteName } from './harmony';
 import { Keyboard } from './Keyboard';
 import { moods, type Letter } from './moods';
 import { Staff } from './Staff';
-import { usePlayer } from './usePlayer';
+import { BPM, usePlayer } from './usePlayer';
 
 const Page = styled.main`
   max-width: 890px;
-  padding: 36px 23px 32px;
+  padding: 18px 23px 32px;
   margin: 0 auto;
   @media (max-width: 600px) {
-    padding: 23px 13px;
+    padding: 12px 13px 23px;
   }
 `;
 
-const Header = styled.header`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 20px;
-`;
-
-const Brand = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 11px;
-`;
-
-const Icon = styled.span`
-  width: 43px;
-  height: 43px;
+const Harmony = styled.dl`
   display: grid;
-  place-items: center;
-  color: #fff;
-  background: #7546b5;
-  border-radius: 12px;
-  font-size: 26px;
-  line-height: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 9px 14px;
+  border: 1px solid #e3d9ee;
+  border-radius: 11px;
+  background: #fbf8ff;
 `;
 
-const Title = styled.h1`
-  margin: 0;
-  font-size: clamp(24px, 5vw, 34px);
-  letter-spacing: -0.045em;
-  line-height: 1.12;
+const Metric = styled.div`
+  min-width: 0;
+`;
+
+const MetricLabel = styled.dt`
+  color: #655775;
+  font-size: 11px;
+`;
+
+const MetricValue = styled.dd`
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
 `;
 
 const Instrument = styled.section`
@@ -72,9 +67,9 @@ const DesktopHelp = styled.span`
 `;
 
 export function App() {
-  const { staff, index, running, notice, enqueue, stop, replay, clear } = usePlayer();
+  const { staff, playing, running, notice, enqueue, stop, replay, clear } = usePlayer();
   const [showNames, setShowNames] = useState(false);
-  const active = index === null ? undefined : staff[index];
+  const active = playing ? staff[playing.index] : undefined;
   const handleKey = useEffectEvent((event: KeyboardEvent) => {
     if (
       event.repeat ||
@@ -105,16 +100,30 @@ export function App() {
   }, []);
 
   return (
-    <Page>
-      <Header>
-        <Brand>
-          <Icon aria-hidden="true">♫</Icon>
-          <Title>Emoji Chords</Title>
-        </Brand>
-      </Header>
+    <Page aria-label="Emoji Chords">
+      <Harmony aria-label="Playback details">
+        <Metric>
+          <MetricLabel>Musical key</MetricLabel>
+          <MetricValue>
+            {playing ? noteName(playing.key.tonic) + ' ' + playing.key.mode : '—'}
+          </MetricValue>
+        </Metric>
+        <Metric>
+          <MetricLabel>{playing?.pickup ? 'Pickup chord' : 'Chord'}</MetricLabel>
+          <MetricValue>{playing?.chord ?? '—'}</MetricValue>
+        </Metric>
+        <Metric>
+          <MetricLabel>Queue</MetricLabel>
+          <MetricValue>{playing ? staff.length - playing.index - 1 : 0}</MetricValue>
+        </Metric>
+        <Metric>
+          <MetricLabel>Tempo</MetricLabel>
+          <MetricValue>{BPM} BPM</MetricValue>
+        </Metric>
+      </Harmony>
       <Staff
         staff={staff}
-        index={index ?? undefined}
+        index={playing?.index}
         running={running}
         notice={notice}
         onStop={stop}

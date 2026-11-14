@@ -3,14 +3,16 @@ import { transition, voice, type Key, type Voicing } from './harmony';
 import { moods, type Letter } from './moods';
 import { SineSynth } from './synth';
 
-const BPM = 88;
+export const BPM = 88;
 
 const chordDuration = 120 / BPM;
 const pickupDuration = 60 / BPM;
 
+type Playback = { index: number; key: Key; chord: string; pickup: boolean };
+
 export function usePlayer() {
   const [staff, setStaff] = useState<Letter[]>([]);
-  const [index, setIndex] = useState<number | null>(null);
+  const [playing, setPlaying] = useState<Playback | null>(null);
   const [running, setRunning] = useState(false);
   const [notice, setNotice] = useState('');
   const engine = useRef({
@@ -56,10 +58,10 @@ export function usePlayer() {
     engine.previous = chord;
     engine.nextTime = time + duration;
     if (!pickup) engine.step = (step + 1) % mood.chords.length;
-    const currentIndex = engine.index;
+    const snapshot = { index: engine.index, key, chord: chord.name, pickup: !!pickup };
 
     engine.displayTimer = window.setTimeout(
-      () => setIndex(currentIndex),
+      () => setPlaying(snapshot),
       Math.max(0, (time - synth.time) * 1000),
     );
 
@@ -100,7 +102,7 @@ export function usePlayer() {
     window.clearTimeout(engine.timer);
     window.clearTimeout(engine.displayTimer);
     engine.synth.stop();
-    setIndex(null);
+    setPlaying(null);
     setRunning(false);
   }, [engine]);
 
@@ -128,5 +130,5 @@ export function usePlayer() {
 
   useEffect(() => stop, [stop]);
 
-  return { staff, index, running, notice, enqueue, stop, replay, clear };
+  return { staff, playing, running, notice, enqueue, stop, replay, clear };
 }
