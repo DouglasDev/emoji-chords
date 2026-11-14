@@ -50,9 +50,40 @@ const Action = styled.button`
   }
 `;
 
-const Replay = styled(Action)`
+const PrimaryAction = styled(Action)`
   border-color: #e9d9fd;
   background: #f5edff;
+`;
+
+const Transport = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 4px;
+`;
+
+const TransportButton = styled(PrimaryAction)`
+  min-width: 66px;
+`;
+
+const Indicator = styled.span`
+  width: 9px;
+  height: 9px;
+  border: 1px solid #8b7a9f;
+  border-radius: 50%;
+  &[data-running='true'] {
+    border-color: #216e50;
+    background: #27815d;
+  }
+`;
+
+const ScreenReaderText = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 `;
 
 const Track = styled.ol`
@@ -136,11 +167,14 @@ const Feedback = styled.p`
 type Props = {
   staff: Letter[];
   index?: number;
+  running: boolean;
+  notice: string;
+  onStop: () => void;
   onReplay: (sequence?: Letter[]) => void;
   onClear: () => void;
 };
 
-export function Staff({ staff, index, onReplay, onClear }: Props) {
+export function Staff({ staff, index, running, notice, onStop, onReplay, onClear }: Props) {
   const [input, setInput] = useState('');
   const [feedback, setFeedback] = useState('');
   const marker = useRef<HTMLLIElement>(null);
@@ -187,15 +221,21 @@ export function Staff({ staff, index, onReplay, onClear }: Props) {
       <Header>
         <Title id="staff-heading">Emoji staff</Title>
         <Actions>
-          <Replay
-            disabled={!staff.length}
-            onClick={() => {
-              setFeedback('');
-              onReplay();
-            }}
-          >
-            ↻ Replay
-          </Replay>
+          <Transport>
+            <TransportButton
+              type="button"
+              disabled={!running && !staff.length}
+              onClick={() => {
+                setFeedback('');
+                if (running) onStop();
+                else onReplay();
+              }}
+            >
+              {running ? 'Stop' : 'Replay'}
+            </TransportButton>
+            <Indicator aria-hidden="true" data-running={running} />
+            <ScreenReaderText role="status">{running ? 'Playing' : 'Stopped'}</ScreenReaderText>
+          </Transport>
           <Action disabled={!staff.length} onClick={() => void copy()}>
             Copy
           </Action>
@@ -236,9 +276,10 @@ export function Staff({ staff, index, onReplay, onClear }: Props) {
             setFeedback('');
           }}
         />
-        <Replay type="submit">Play sequence</Replay>
+        <PrimaryAction type="submit">Play sequence</PrimaryAction>
       </PasteForm>
       {feedback && <Feedback role="status">{feedback}</Feedback>}
+      {notice && <Feedback role="alert">{notice}</Feedback>}
     </Section>
   );
 }
