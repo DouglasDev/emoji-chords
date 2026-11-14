@@ -1,0 +1,22 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 280px;
+  min-height: 100vh;
+  margin: 0;
+  color: #271c37;
+  background: radial-gradient(ellipse at 45% -10%, #ede2fc, transparent 67%), #f7f3fc;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid #8451c6;
+  outline-offset: 3px;
+}
